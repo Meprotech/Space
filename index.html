@@ -9,38 +9,41 @@
     <link rel="shortcut icon" href="TemplateData/favicon.ico">
     <link rel="stylesheet" href="TemplateData/style.css">
     <style>
-      /* Audio control styling */
-      #audio-controls {
-        position: fixed;
+      #shoot-button {
+        position: fixed; 
         bottom: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        z-index: 1000;
-        display: flex;
-        gap: 10px;
-      }
-
-      .audio-btn {
-        padding: 8px 16px;
+        left: 50%; 
+        transform: translateX(-50%); 
+        padding: 12px 24px;
+        background: #2ecc71; /* Changed to green for play action */
+        color: white;
         border: none;
-        border-radius: 20px;
+        border-radius: 25px;
         cursor: pointer;
+        z-index: 1000;
         font-family: Arial, sans-serif;
-        font-size: 14px;
+        font-size: 16px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         transition: all 0.3s ease;
+        white-space: nowrap; 
       }
 
-      #play-btn {
-        background: #2ecc71;
-        color: white;
+      #shoot-button:hover {
+        background: #27ae60; /* Darker green */
+        transform: translateX(-50%) translateY(-2px); 
+        box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2);
       }
 
-      #stop-btn {
-        background: #e74c3c;
-        color: white;
+      #shoot-button:active {
+        transform: translateX(-50%) scale(0.95);
       }
 
-      /* Hidden elements */
+      #shoot-button:disabled {
+        background: #95a5a6;
+        cursor: not-allowed;
+        opacity: 0.7;
+      }
+
       #unity-webgl-logo,
       #enterar,
       #unity-webxr-link,
@@ -65,15 +68,10 @@
       </div>
     </div>
 
-    <div id="audio-controls">
-      <button id="play-btn" class="audio-btn" onclick="playAudio()" disabled>Play</button>
-      <button id="stop-btn" class="audio-btn" onclick="stopAudio()" disabled>Stop</button>
-    </div>
+    <button id="shoot-button" onclick="PlayAudio()" disabled>Play Audio</button>
 
     <script>
-      const audioUrl = "https://neolearn-asset.s3.ap-south-1.amazonaws.com/NeolearnChapterAudios/English_Gravitation.wav";
-      let unityInstance = null;
-
+      // Keep existing Unity loader configuration
       var buildUrl = "Build";
       var loaderUrl = buildUrl + "/WebGL.loader.js";
       var config = {
@@ -86,7 +84,20 @@
         productVersion: "0.1",
       };
 
-      // Initialize Unity
+      // Audio URL (you can make this dynamic if needed)
+      const audioUrl = "https://neolearn-asset.s3.ap-south-1.amazonaws.com/NeolearnChapterAudios/English_Gravitation.wav";
+
+      var container = document.querySelector("#unity-container");
+      var canvas = document.querySelector("#unity-canvas");
+      var canvasContainer = document.querySelector("#unity-canvas-container");
+      var loadingBar = document.querySelector("#unity-loading-bar");
+      var progressBarFull = document.querySelector("#unity-progress-bar-full");
+      var fullscreenButton = document.querySelector("#unity-fullscreen-button");
+      var unityInstance = null;
+      
+
+      loadingBar.style.display = "block";
+
       var script = document.createElement("script");
       script.src = loaderUrl;
       script.onload = () => {
@@ -96,56 +107,42 @@
           unityInstance = instance;
           loadingBar.style.display = "none";
           
-          // Enable audio controls
-          document.getElementById('play-btn').disabled = false;
-          document.getElementById('stop-btn').disabled = false;
+          document.getElementById("shoot-button").disabled = false;
 
-          // Initialize audio system
-          unityInstance.SendMessage('AudioManager', 'InitializeAudio');
-          
           if (fullscreenButton) {
-            fullscreenButton.onclick = () => unityInstance.SetFullscreen(1);
+            fullscreenButton.onclick = () => {
+              unityInstance.SetFullscreen(1);
+            };
           }
-        }).catch(handleError);
+        }).catch((message) => {
+          alert(message);
+        });
       };
       document.body.appendChild(script);
 
-      function playAudio() {
-        if(unityInstance) {
-          unityInstance.SendMessage('AudioManager', 'LoadAudio', audioUrl);
-          toggleButtonStates(true);
-        }
-      }
+      function PlayAudio() {
+    if(unityInstance) {
+        // Send the message to Unity to play audio
+        unityInstance.SendMessage('AudioManager', 'PlayAudio', audioUrl);
+        
+        // Apply both the centering and scale transform
+        const btn = document.getElementById("shoot-button");
+        btn.style.transform = 'translateX(-50%) scale(0.95)';
+        setTimeout(() => {
+            btn.style.transform = 'translateX(-50%) scale(1)';
+        }, 100);
+    }
+}
 
-      function stopAudio() {
-        if(unityInstance) {
-          unityInstance.SendMessage('AudioManager', 'StopAudio');
-          toggleButtonStates(false);
-        }
-      }
 
-      function toggleButtonStates(isPlaying) {
-        const playBtn = document.getElementById('play-btn');
-        const stopBtn = document.getElementById('stop-btn');
-        playBtn.disabled = isPlaying;
-        stopBtn.disabled = !isPlaying;
-        playBtn.style.opacity = isPlaying ? 0.5 : 1;
-        stopBtn.style.opacity = !isPlaying ? 0.5 : 1;
-      }
-
-      function handleError(message) {
-        alert(`Initialization failed: ${message}`);
-        document.getElementById('audio-controls').style.display = 'none';
-      }
-
-      // VR functionality
+      // Keep existing VR functionality
       let enterVRButton = document.getElementById('entervr');
-      document.addEventListener('onVRSupportedCheck', (event) => {
+      document.addEventListener('onVRSupportedCheck', function (event) {
         enterVRButton.disabled = !event.detail.supported;
-      });
-      enterVRButton.addEventListener('click', (event) => {
+      }, false);
+      enterVRButton.addEventListener('click', function (event) {
         unityInstance.Module.WebXR.toggleVR();
-      });
+      }, false);
     </script>
   </body>
 </html>
