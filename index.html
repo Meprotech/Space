@@ -128,8 +128,7 @@
 
       function PlayAudio() {
           if (unityInstance) {
-            // Send the (possibly dynamic) audioUrl to Unity's AudioManager.
-            unityInstance.SendMessage('AudioLoader', 'audioUrl', audioUrl);
+            unityInstance.SendMessage('AudioManager', 'PlayAudio', audioUrl);
             
             const btn = document.getElementById("shoot-button");
             btn.style.transform = 'translateX(-50%) scale(0.95)';
