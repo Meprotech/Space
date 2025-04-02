@@ -64,7 +64,7 @@
       </div>
     </div>
 
-    <button id="shoot-button" onclick="PlayAudio()" disabled>Play Audio</button>
+
 
     <script>
       // --- Parse URL Parameter ---
@@ -126,17 +126,27 @@
       };
       document.body.appendChild(script);
 
-      function PlayAudio() {
-          if (unityInstance) {
-            unityInstance.SendMessage('AudioManager', 'PlayAudio', audioUrl);
-            
-            const btn = document.getElementById("shoot-button");
-            btn.style.transform = 'translateX(-50%) scale(0.95)';
-            setTimeout(() => {
-                btn.style.transform = 'translateX(-50%) scale(1)';
-            }, 100);
-          }
-      }
+     script.onload = () => {
+  createUnityInstance(canvas, config, (progress) => {
+    progressBarFull.style.width = 100 * progress + "%";
+  }).then((instance) => {
+    unityInstance = instance;
+    loadingBar.style.display = "none";
+    
+    // Auto-play if audio URL exists
+    if (audioUrl) {
+      unityInstance.SendMessage('AudioManager', 'PlayAudio', audioUrl);
+    }
+    
+    if (fullscreenButton) {
+      fullscreenButton.onclick = () => {
+        unityInstance.SetFullscreen(1);
+      };
+    }
+  }).catch((message) => {
+    alert(message);
+  });
+};
 
       let enterVRButton = document.getElementById('entervr');
       document.addEventListener('onVRSupportedCheck', function (event) {
